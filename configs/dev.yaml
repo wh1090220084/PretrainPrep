@@ -1,0 +1,102 @@
+# Self-contained development profile for smoke tests and end-to-end verification.
+# Do NOT use the bytes tokenizer for production training.
+profile: development
+paths:
+  books_dir: ../books
+  work_dir: ../data-dev
+
+tokenizer:
+  backend: bytes
+  name: bytes-v1
+  hf_model: null
+  tokenizer_json: null
+  vocab_files: []
+  local_files_only: true
+  eos_ids: [256]
+  eos_loss: 1
+
+l0:
+  min_chars: 64
+  replacement_ratio_max: 0.001
+  control_ratio_max: 0.005
+  encoding_whitelist: [utf-8, gb18030, big5, utf-16]
+  cleaning:
+    page_number_max_chars: 12
+    toc_scan_lines: 200
+    header_footer_min_count: 5
+    header_footer_min_ratio: 0.01
+    header_footer_max_chars: 40
+    hard_wrap_max_joins: 5
+  structure:
+    max_chapters: 300
+    avg_tokens_min: 20
+    chars_per_token: 1.0
+    heading_max_chars: 80
+    loose_scan_radius: 2
+
+l1:
+  target_langs: [zh, en]
+  gates: [rule_v1, stat_v1, lang]
+  simhash_bits: 128
+  simhash_hamming: 3
+  simhash_bands: 8
+  simhash_shingle_size: 4
+  simhash_max_shingles: 100000
+  stat_threshold: 0.10
+  stat_weights:
+    repetition: 0.25
+    lexical: 0.20
+    sentence: 0.15
+    script: 0.15
+    language: 0.25
+  min_tokens: 16
+  max_url_density: 0.002
+  max_junk_line_ratio: 0.10
+  max_copyright_block_chars: 500
+  ad_patterns:
+    - '(?i)(加|联系)?\s*(微信|QQ|q q)\s*[:：]?\s*[A-Za-z0-9_-]{5,}'
+    - '(?i)本书由.{0,40}(整理|制作|发布)'
+    - '(?i)(扫码|关注公众号|更多电子书|免费下载)'
+  language:
+    detector: heuristic
+    model_path: null
+    heuristic_fallback: true
+    max_chars: 5000
+
+l2:
+  max_tokens: 384
+  min_tokens: 32
+  merge_policy: same_chapter
+  separators:
+    - "\n\n"
+    - "\n"
+    - "。！？；…"
+    - ".!?;"
+    - "，,"
+
+l3:
+  algorithm: obfd
+  bin_size: 512
+  pack_mode: bfd
+  max_chunks_in_memory: 100000
+  external_sort_runs: 8
+  temp_dir: null
+
+l4:
+  format: jsonl
+  shard_size_tokens: 100000
+
+determinism:
+  shuffle_seed: 42
+
+runtime:
+  log_level: INFO
+  lock_timeout_seconds: 0
+  validate_after_run: true
+  validation_sample_packs: 10
+  validation_sample_chunks: 1000
+  alert_rejection_rate: 0.40
+  alert_fill_ratio: 0.90
+  alert_cross_doc_ratio: 0.30
+  alert_target_language_ratio: 0.95
+  alert_cross_doc_8gram_ratio: 0.01
