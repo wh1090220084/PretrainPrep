@@ -5,6 +5,7 @@ venv/
 .pytest_cache/
 .mypy_cache/
 build/
+models/
 dist/
 *.egg-info/
 data*/
